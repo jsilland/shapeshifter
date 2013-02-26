@@ -95,7 +95,7 @@
 						<link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc</link>
 						<link>http://fasterxml.github.com/jackson-databind/javadoc/2.0.5</link>
 					</links>
-					<stylesheet>maven</stylesheet>
+					<stylesheet>java</stylesheet>
 					<bootclasspath>${sun.boot.class.path}</bootclasspath>
 					<additionalJOption>-J-Xmx1024m</additionalJOption>
 					<detectJavaApiLink>true</detectJavaApiLink>
