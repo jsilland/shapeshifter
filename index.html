@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Shapeshifter : Protocol Buffers to JSON bridge" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Shapeshifter</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/turn/shapeshifter">View on GitHub</a>
+
+          <h1 id="project_title">Shapeshifter</h1>
+          <h2 id="project_tagline">Protocol Buffers to JSON bridge</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/turn/shapeshifter/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/turn/shapeshifter/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Shapeshifter</h1>
+
+<p>Shapeshifter is a library that bridges the gap between Protocol Buffers and JSON, for the purpose of building robust APIs whose payloads are well-defined and documented.</p>
+
+<p>Protocol Buffers provide an extremely compact, backward and forward-compatible serialization mechanism that is well-suited for machine to machine communication. On the other hand, JSON is the native data format for all parts of the modern web toolchain.</p>
+
+<p>Shapeshifter lets you re-use messages defined as protobufs in your web service by exposing them as JSON objects. We hope you'll find Shapeshifter as useful as we have when developing our latest-generation web services. Either way, feel free to drop a line on the mailing list or file a bug on the tracker.</p>
+
+<h2>Usage</h2>
+
+<p>Assuming there exists a Protocol Buffer message defined as such:</p>
+
+<pre><code>message Person {
+    optional string name = 1;
+    optional int32 age = 2;
+    optional string city = 3;
+}
+</code></pre>
+
+<p>You may declare a schema </p>
+
+<pre><code>NamedSchema personSchema = NamedSchema.of(Person.getDescriptor(), "Person");
+</code></pre>
+
+<h2>Serialization</h2>
+
+<p>Once a schema is defined, you may want to create an object for generating JSON:</p>
+
+<pre><code>Serializer personSerializer = personSchema.getSerializer();
+Person biebs = Person.newBuilder().setName("Justin Bieber").build();
+JsonNode node = personSerializer.serialize(biebs);
+</code></pre>
+
+<p>The resulting node's notation will be:</p>
+
+<pre><code>{
+    "name": "Justin Bieber",
+}
+</code></pre>
+
+<h2>Parsing</h2>
+
+<p>Conversely, schemas are able to validate and parse JSON content into Protocol Buffers messages:</p>
+
+<pre><code>Parser personParser = personSchema.getParser();
+Person parsedBiebs = Person.newBuilder().mergeFrom(personParser.parse(node)).build();
+</code></pre>
+
+<h2>Configurability</h2>
+
+<p>Schemas are configurable — you may want to transform values and names, avoid surfacing certain confidential fields and even create map-like JSON constructs. Read the full Javadoc to find out the available options.</p>
+
+<h2>JSON-Schema</h2>
+
+<p>Moreover, Shapeshifter supports the JSON-Schema specification and is able to derive the set of schemas from your Protocol Buffer messages. The library contains a message definition that represents a JSON-Schema and, as a proof of concept, Shapeshifter uses itself to define a schema compliant with the specification:</p>
+
+<pre><code>JsonSchema personJsonSchema = personSchema.getJsonSchema();
+JsonNode node = JsonSchemas.SCHEMA.getSerializer().serialize(personJsonSchema);
+</code></pre>
+
+<p>Will yield:</p>
+
+<pre><code>{
+    "id": "Person",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        }
+    }
+}
+</code></pre>
+
+<h2>License</h2>
+
+<p>Shapeshifter is distributed under the terms of the Apache Software License version 2.0. See LICENSE file for more details.</p>
+
+<h2>Authors and contributors</h2>
+
+<ul>
+<li>Julien Silland &lt;<a href="mailto:jsilland@turn.com">jsilland@turn.com</a>&gt; (Software Engineer at Turn, Inc)<br>
+Original author, main developer and maintainer</li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Shapeshifter maintained by <a href="https://github.com/turn">turn</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
