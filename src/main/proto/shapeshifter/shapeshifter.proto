@@ -1,0 +1,63 @@
+// Copyright 2012, 2013 Turn, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package shapeshifter;
+
+option java_package = "com.turn.shapeshifter";
+option java_outer_classname = "ShapeshifterProtos";
+
+// Enumeration of JSON Schema property types
+enum JsonType {
+	STRING = 1;
+	NUMBER = 2;
+	INTEGER = 3;
+	BOOLEAN = 4;
+	OBJECT = 5;
+	ARRAY = 6;
+}
+
+// Representation of a JSON Schema.
+//
+// JSON Schemas may be used to represent objects that have properties or
+// properties themselves. This data structure supports both use cases.
+// Properties may be primitives, arrays or objects. In the latter cases,
+// this data structure also supports referring to a separate schema.
+message JsonSchema {
+	// The identifier of this schema
+	optional string id = 1;
+
+	// The name of this schema
+	optional string name = 2;
+
+	// The JSON type this schema describes
+	optional JsonType type = 3 [default = OBJECT];
+
+	// The description of the property
+	optional string description = 4;
+
+	// Additional properties supported by this schema
+	optional JsonSchema additional_properties = 5;
+
+	// Refers to a separate JSON schema for array items
+	optional JsonSchema items = 6;
+
+	// Refers to a separate JSON schema for object properties
+	optional string schema_reference = 7;
+
+	// The properties covered by this schema
+	repeated JsonSchema properties = 8;
+
+	// The set of supported enum values, for enum properties
+	repeated string enum = 9;
+}
