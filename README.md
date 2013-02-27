@@ -66,6 +66,12 @@ Will yield:
 		"properties": {
 			"name": {
 				"type": "string"
+			},
+			"age": {
+				"type": "number"
+			},
+			"city": {
+				"type": "string"
 			}
 		}
 	}
