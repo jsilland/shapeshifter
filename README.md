@@ -5,7 +5,7 @@ Shapeshifter is a library that bridges the gap between Protocol Buffers and JSON
 
 Protocol Buffers provide an extremely compact, backward and forward-compatible serialization mechanism that is well-suited for machine to machine communication. On the other hand, JSON is the native data format for all parts of the modern web toolchain.
 
-Shapeshifter lets you re-use messages defined as protobufs in your web service by exposing them as JSON objects. We hope you'll find Shapeshifter as useful as we have when developing our latest-generation web services. Either way, feel free to drop a line on the mailing list or file a bug on the tracker.
+Shapeshifter lets you re-use messages defined as protobufs in your web service by exposing them as JSON objects. We hope you'll find Shapeshifter as useful as we have when developing our latest-generation web services. Either way, feel free to drop a line on the [mailing list](https://groups.google.com/forum/?fromgroups#!forum/shapeshifter-discuss) or file a bug on the [tracker](https://github.com/turn/shapeshifter/issues).
 
 Usage
 -----
@@ -48,7 +48,7 @@ Conversely, schemas are able to validate and parse JSON content into Protocol Bu
 Configurability
 ---------------
 
-Schemas are configurable — you may want to transform values and names, avoid surfacing certain confidential fields and even create map-like JSON constructs. Read the full Javadoc to find out the available options.
+Schemas are configurable — you may want to transform values and names, avoid surfacing certain confidential fields and even create map-like JSON constructs. Read the full [Javadoc](http://turn.github.com/shapeshifter/apidocs/) to find out the available options.
 
 JSON-Schema
 -----------
