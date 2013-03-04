@@ -29,7 +29,7 @@ Once a schema is defined, you may want to create an object for generating JSON:
 
 	Serializer personSerializer = personSchema.getSerializer();
 	Person biebs = Person.newBuilder().setName("Justin Bieber").build();
-	JsonNode node = personSerializer.serialize(biebs);
+	JsonNode node = personSerializer.serialize(biebs, SchemaRegistry.EMPTY);
 
 The resulting node's notation will be:
 
@@ -43,7 +43,8 @@ Parsing
 Conversely, schemas are able to validate and parse JSON content into Protocol Buffers messages:
 
 	Parser personParser = personSchema.getParser();
-	Person parsedBiebs = Person.newBuilder().mergeFrom(personParser.parse(node)).build();
+	Message message = personParser.parse(node, SchemaRegistry.EMPTY)
+	Person parsedBiebs = Person.newBuilder().mergeFrom(message).build();
 
 Configurability
 ---------------
