@@ -70,7 +70,7 @@
 
 <pre><code>Serializer personSerializer = personSchema.getSerializer();
 Person biebs = Person.newBuilder().setName("Justin Bieber").build();
-JsonNode node = personSerializer.serialize(biebs);
+JsonNode node = personSerializer.serialize(biebs, SchemaRegistry.EMPTY);
 </code></pre>
 
 <p>The resulting node's notation will be:</p>
@@ -85,7 +85,8 @@ JsonNode node = personSerializer.serialize(biebs);
 <p>Conversely, schemas are able to validate and parse JSON content into Protocol Buffers messages:</p>
 
 <pre><code>Parser personParser = personSchema.getParser();
-Person parsedBiebs = Person.newBuilder().mergeFrom(personParser.parse(node)).build();
+Message message = personParser.parse(node, SchemaRegistry.EMPTY);
+Person parsedBiebs = Person.newBuilder().mergeFrom(message).build();
 </code></pre>
 
 <h2>Configurability</h2>
