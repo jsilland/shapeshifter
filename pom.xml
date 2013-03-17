@@ -17,8 +17,9 @@
 	</organization>
 
 	<scm>
-		<connection>scm:git:git://github.com/turn/shapeshifter.git</connection>
-		<url>http://github.com/turn/shapeshifter</url>
+		<connection>scm:git:https://github.com/turn/shapeshifter.git</connection>
+		<url>scm:git:https://github.com/turn/shapeshifter.git</url>
+		<developerConnection>scm:git:https://github.com/turn/shapeshifter.git</developerConnection>
 	</scm>
 
 	<developers>
