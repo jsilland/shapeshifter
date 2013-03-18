@@ -7,6 +7,17 @@ Protocol Buffers provide an extremely compact, backward and forward-compatible s
 
 Shapeshifter lets you re-use messages defined as protobufs in your web service by exposing them as JSON objects. We hope you'll find Shapeshifter as useful as we have when developing our latest-generation web services. Either way, feel free to drop a line on the [mailing list](https://groups.google.com/forum/?fromgroups#!forum/shapeshifter-discuss) or file a bug on the [tracker](https://github.com/turn/shapeshifter/issues).
 
+Maven coordinates
+-----------------
+
+You may add the following to your `pom.xml`
+
+	<dependency>
+		<groupId>com.turn</groupId>
+		<artifactId>shapeshifter</artifactId>
+		<version>1.0.0</version>
+	</dependency>
+
 Usage
 -----
 
