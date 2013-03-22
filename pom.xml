@@ -4,7 +4,7 @@
 
 	<groupId>com.turn</groupId>
 	<artifactId>shapeshifter</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Shapeshifter</name>
@@ -20,8 +20,8 @@
 		<connection>scm:git:https://github.com/turn/shapeshifter.git</connection>
 		<url>scm:git:https://github.com/turn/shapeshifter.git</url>
 		<developerConnection>scm:git:https://github.com/turn/shapeshifter.git</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+	  	<tag>HEAD</tag>
+	</scm>
 
 	<developers>
 		<developer>
@@ -58,7 +58,7 @@
 			<plugin>
 				<groupId>com.google.protobuf.tools</groupId>
 				<artifactId>maven-protoc-plugin</artifactId>
-				<version>0.3.0</version>
+				<version>0.3.1</version>
 				<executions>
 					<execution>
 						<id>Generate proto sources</id>

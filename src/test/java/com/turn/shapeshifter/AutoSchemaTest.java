@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,11 +15,14 @@
  */
 package com.turn.shapeshifter;
 
+import com.turn.shapeshifter.ShapeshifterProtos.JsonSchema;
 import com.turn.shapeshifter.ShapeshifterProtos.JsonType;
 import com.turn.shapeshifter.testing.TestProtos.Actor;
 import com.turn.shapeshifter.testing.TestProtos.Bar;
+import com.turn.shapeshifter.testing.TestProtos.DefaultValue;
 import com.turn.shapeshifter.testing.TestProtos.Foo;
 import com.turn.shapeshifter.testing.TestProtos.Movie;
+import com.turn.shapeshifter.testing.TestProtos.RequiredValue;
 import com.turn.shapeshifter.testing.TestProtos.Union;
 
 import org.junit.Assert;
@@ -64,6 +67,37 @@ public class AutoSchemaTest {
 		Assert.assertEquals(JsonType.STRING, movieItems.getProperties(2).getType());
 		Assert.assertEquals("productionYear", movieItems.getProperties(3).getName());
 		Assert.assertEquals(JsonType.INTEGER, movieItems.getProperties(3).getType());
+	}
+	
+	@Test
+	public void testGetJsonSchemaRequiredField() throws Exception {
+		Schema schema = new AutoSchema(RequiredValue.getDescriptor());
+		ShapeshifterProtos.JsonSchema jsonSchema = schema.getJsonSchema(ReadableSchemaRegistry.EMPTY);
+				
+		Assert.assertEquals(JsonType.OBJECT, jsonSchema.getType());
+		Assert.assertEquals(1, jsonSchema.getPropertiesCount());
+		Assert.assertTrue(jsonSchema.getProperties(0).getRequired());
+	}
+	
+	@Test
+	public void testJsonSchemaWithDefaultValue() throws Exception {
+		Schema schema = new AutoSchema(DefaultValue.getDescriptor());
+		JsonSchema jsonSchema = schema.getJsonSchema(SchemaRegistry.EMPTY);
+	 
+		Assert.assertEquals(JsonType.OBJECT, jsonSchema.getType());
+		Assert.assertEquals(3, jsonSchema.getPropertiesCount());
+		
+		Assert.assertEquals("stringValue", jsonSchema.getProperties(0).getName());
+		Assert.assertEquals(JsonType.STRING, jsonSchema.getProperties(0).getType());
+		Assert.assertEquals("foo", jsonSchema.getProperties(0).getDefault());
+
+		Assert.assertEquals("intValue", jsonSchema.getProperties(1).getName());
+		Assert.assertEquals(JsonType.INTEGER, jsonSchema.getProperties(1).getType());
+		Assert.assertEquals("42", jsonSchema.getProperties(1).getDefault());
+
+		Assert.assertEquals("enumValue", jsonSchema.getProperties(2).getName());
+		Assert.assertEquals(JsonType.STRING, jsonSchema.getProperties(2).getType());
+		Assert.assertEquals("second", jsonSchema.getProperties(2).getDefault());
 	}
 	
 	@Test

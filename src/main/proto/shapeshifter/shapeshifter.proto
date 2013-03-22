@@ -60,4 +60,13 @@ message JsonSchema {
 
 	// The set of supported enum values, for enum properties
 	repeated string enum = 9;
+	
+	// For a property, indicates whether it is required
+	optional bool required = 10 [default = false];
+	
+	// For a property, indicates the default value
+	optional string default = 11;
+	
+	// For a property, provides the content-type or microformat of the value
+	optional string format = 12;
 }

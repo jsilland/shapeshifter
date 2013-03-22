@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,7 +26,8 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 
 /**
- * Implementation of {@link Parser} based on the configuration contained in a {@link NamedSchema}.
+ * Implementation of {@link Parser} based on the configuration contained in a
+ * {@link NamedSchema}.
  *
  * @author jsilland
  */
@@ -34,17 +35,19 @@ class SchemaParser implements Parser {
 
 	private final NamedSchema schema;
 
+	/**
+	 * Returns a new parser that will use the	 configured schema.
+	 * 
+	 * @param schema the schema to use for parsing
+	 */
 	SchemaParser(NamedSchema schema) {
 		this.schema = schema;
 	}
 
 	/**
-	 *
-	 * @param node
-	 * @param registry
-	 * @return
-	 * @throws ParsingException
+	 * {@inheritDoc}
 	 */
+	@Override
 	public Message parse(JsonNode node, ReadableSchemaRegistry registry) throws ParsingException {
 		Message.Builder builder = DynamicMessage.newBuilder(schema.getDescriptor());
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,10 @@ package com.turn.shapeshifter;
 
 import com.turn.shapeshifter.ShapeshifterProtos.JsonSchema;
 import com.turn.shapeshifter.ShapeshifterProtos.JsonType;
+import com.turn.shapeshifter.testing.TestProtos.DefaultValue;
+import com.turn.shapeshifter.testing.TestProtos.RequiredValue;
 import com.turn.shapeshifter.testing.TestProtos.Union;
+import com.turn.shapeshifter.transformers.DateTimeTransformer;
 
 import java.util.Map;
 
@@ -277,6 +280,106 @@ public class NamedSchemaTest {
 				Assert.assertEquals(JsonType.STRING, property.getType());
 				Assert.assertTrue(property.getEnumList().contains("FIRST"));
 				Assert.assertTrue(property.getEnumList().contains("SECOND"));
+				checked = true;
+			}
+		}
+		Assert.assertTrue(checked);
+	}
+	
+	@Test
+	public void testJsonSchemaWithFormatTransformer() throws Exception {
+		NamedSchema schema = NamedSchema.of(Union.getDescriptor(), "Union")
+				.transform("int64_value", new DateTimeTransformer())
+				.useSchema("union_value", "Union")
+				.useSchema("union_repeated", "Union");
+		SchemaRegistry registry = new SchemaRegistry();
+		registry.register(schema);
+		JsonSchema jsonSchema = schema.getJsonSchema(registry);
+		
+		Assert.assertEquals("Union", jsonSchema.getId());
+		
+		boolean checked = false;
+		for (JsonSchema property : jsonSchema.getPropertiesList()) {
+			if (property.getName().equals("int64Value")) {
+				Assert.assertEquals(JsonType.STRING, property.getType());
+				Assert.assertEquals("date-time", property.getFormat());
+				checked = true;
+			}
+		}
+		Assert.assertTrue(checked);
+	}
+	
+	@Test
+	public void testJsonSchemaWithDefaultValue() throws Exception {
+		NamedSchema schema = NamedSchema.of(DefaultValue.getDescriptor(), "DefaultValue");
+		JsonSchema jsonSchema = schema.getJsonSchema(SchemaRegistry.EMPTY);
+		boolean checked = false;
+		for (JsonSchema property : jsonSchema.getPropertiesList()) {
+			if (property.getName().equals("stringValue")) {
+				Assert.assertEquals("foo", property.getDefault());
+				checked = true;
+			}
+		}
+		Assert.assertTrue(checked);
+	}
+	
+	@Test
+	public void testJsonSchemaWithDefaultValueEnumCaseFormat() throws Exception {
+		NamedSchema schema = NamedSchema.of(DefaultValue.getDescriptor(), "DefaultValue");
+		JsonSchema jsonSchema = schema.getJsonSchema(SchemaRegistry.EMPTY);
+				
+		boolean checked = false;
+		for (JsonSchema property : jsonSchema.getPropertiesList()) {
+			if (property.getName().equals("enumValue")) {
+				Assert.assertEquals(property.getDefault(), "second");
+				checked = true;
+			}
+		}
+		Assert.assertTrue(checked);
+	}
+	
+	@Test
+	public void testJsonSchemaWithDefaultValueCustomEnumCaseFormat() throws Exception {
+		NamedSchema schema = NamedSchema.of(DefaultValue.getDescriptor(), "DefaultValue")
+				.enumCaseFormat(CaseFormat.UPPER_UNDERSCORE);
+		JsonSchema jsonSchema = schema.getJsonSchema(SchemaRegistry.EMPTY);
+				
+		boolean checked = false;
+		for (JsonSchema property : jsonSchema.getPropertiesList()) {
+			if (property.getName().equals("enumValue")) {
+				Assert.assertEquals(property.getDefault(), "SECOND");
+				checked = true;
+			}
+		}
+		Assert.assertTrue(checked);
+	}
+	
+	@Test
+	public void testJsonSchemaWithRequiredField() throws Exception {
+		NamedSchema schema = NamedSchema.of(RequiredValue.getDescriptor(), "RequiredValue");
+		JsonSchema jsonSchema = schema.getJsonSchema(SchemaRegistry.EMPTY);
+		
+		boolean checked = false;
+		for (JsonSchema property : jsonSchema.getPropertiesList()) {
+			if (property.getName().equals("requiredString")) {
+				Assert.assertTrue(property.getRequired());
+				checked = true;
+			}
+		}
+		Assert.assertTrue(checked);
+	}
+	
+	@Test
+	public void testJsonSchemaWithFormat() throws Exception {
+		NamedSchema schema = NamedSchema.of(DefaultValue.getDescriptor(), "DefaultValue")
+				.setFormat("string_value", "int");
+
+		JsonSchema jsonSchema = schema.getJsonSchema(SchemaRegistry.EMPTY);
+		
+		boolean checked = false;
+		for (JsonSchema property : jsonSchema.getPropertiesList()) {
+			if (property.getName().equals("stringValue")) {
+				Assert.assertEquals("int", property.getFormat());
 				checked = true;
 			}
 		}

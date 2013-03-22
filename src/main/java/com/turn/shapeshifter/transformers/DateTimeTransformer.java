@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +15,8 @@
  */
 package com.turn.shapeshifter.transformers;
 
+import com.turn.shapeshifter.FormatTransformer;
 import com.turn.shapeshifter.ShapeshifterProtos.JsonType;
-import com.turn.shapeshifter.Transformer;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,10 +35,11 @@ import org.joda.time.format.ISODateTimeFormat;
  * 
  * @see <a href="http://www.ietf.org/rfc/rfc3339.txt">RFC 3339</a>
  */
-public class DateTimeTransformer implements Transformer {
+public class DateTimeTransformer implements FormatTransformer {
 
 	private static final DateTimeFormatter ISO_8601 = ISODateTimeFormat.dateTime()
 			.withZone(DateTimeZone.UTC);
+	private static final String DATE_TIME_FORMAT = "date-time";
 	
 	/** 
 	 * @param object the number of milliseconds since the Unix epoch
@@ -69,5 +70,13 @@ public class DateTimeTransformer implements Transformer {
 	@Override
 	public JsonType getJsonType() {
 		return JsonType.STRING;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getExternalFormat() {
+		return DATE_TIME_FORMAT;
 	}
 }

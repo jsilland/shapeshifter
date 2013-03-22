@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import com.turn.shapeshifter.ShapeshifterProtos.JsonType;
 import java.util.Map;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,7 +51,7 @@ import com.google.protobuf.Message;
  * <ul>
  * <li>All fields are considered during serialization and parsing phases.
  * <li>Fields that are not explicitly set, empty repeated fields and objects in
- *  which no fields are set are ignored.
+ *	which no fields are set are ignored.
  * <li>Fields names are converted between {@code lower_undesrcore} and
  * {@code lowerCamel}.
  * <li>Proto enums values are serialized as strings, formatted as
@@ -61,21 +62,21 @@ import com.google.protobuf.Message;
  * representation of a given message:
  *
  * <ul>
- * 	<li>{@link #addConstant(String, String)} adds a constant field to the
- * 	output.
- * 	<li>{@link #skip(String...)} lets you hide fields defined in the protocol
- * 	buffer from the outside world.
- * 	<li>{@link #substitute(String, String)} lets you change the name of a
- * 	protocol buffer field to something more appropriate
- * 	<li>{@link #enumCaseFormat(CaseFormat)} allows for changing the case format
- *  used for serializing and parsing enums.
- *  <li>{@link #transform(String, Transformer)} provides full control over
- *  how the value of a field is parsed or serialized.
- *  <li>{@link #mapRepeatedField(String, String)} lets you implement dynamic
- *  JSON objects, where a property's key will be taken from a given field of
- *  a repeated object.
- *  <li>{@link #useSchema(String, String)} lets you specify a schema for fields
- *  that reference other Protocol Buffer message types.
+ *	<li>{@link #addConstant(String, String)} adds a constant field to the
+ *	output.
+ *	<li>{@link #skip(String...)} lets you hide fields defined in the protocol
+ *	buffer from the outside world.
+ *	<li>{@link #substitute(String, String)} lets you change the name of a
+ *	protocol buffer field to something more appropriate
+ *	<li>{@link #enumCaseFormat(CaseFormat)} allows for changing the case format
+ *	used for serializing and parsing enums.
+ *	<li>{@link #transform(String, Transformer)} provides full control over
+ *	how the value of a field is parsed or serialized.
+ *	<li>{@link #mapRepeatedField(String, String)} lets you implement dynamic
+ *	JSON objects, where a property's key will be taken from a given field of
+ *	a repeated object.
+ *	<li>{@link #useSchema(String, String)} lets you specify a schema for fields
+ *	that reference other Protocol Buffer message types.
  * </ul>
  *
  * <p><b>Warning</b>: Schema instances are always immutable. Configuration
@@ -105,10 +106,11 @@ public class NamedSchema implements Schema {
 	private final ImmutableMap<String, String> constants;
 	private final CaseFormat enumCaseFormat;
 	private final ImmutableMap<String, String> substitutions;
-	private final ImmutableMap<String, Transformer> transforms;
+	private final ImmutableMap<String, FormatTransformer> transforms;
 	private final ImmutableMap<String, FieldDescriptor> mappings;
 	private final ImmutableMap<String, String> descriptions;
 	private final ImmutableMap<String, String> subObjectSchemas;
+	private final ImmutableMap<String, String> formats;
 
 	/**
 	 * Private constructor. External clients should use
@@ -130,6 +132,9 @@ public class NamedSchema implements Schema {
 	 * indicate the field's name and values indicate the field to use as a key
 	 * in the sub-object
 	 * @param descriptions contains the documentation strings for each field
+	 * @param subObjectSchemas the mapping of references to other schemas, in
+	 * case the field is an object
+	 * @param formats the fields' formats metadata
 	 */
 	private NamedSchema(Descriptor descriptor,
 			String name,
@@ -137,10 +142,11 @@ public class NamedSchema implements Schema {
 			ImmutableMap<String, String> constants,
 			CaseFormat enumCaseFormat,
 			ImmutableMap<String, String> substitutions,
-			ImmutableMap<String, Transformer> transforms,
+			ImmutableMap<String, FormatTransformer> transforms,
 			ImmutableMap<String, FieldDescriptor> mappings,
 			ImmutableMap<String, String> descriptions,
-			ImmutableMap<String, String> subObjectSchemas) {
+			ImmutableMap<String, String> subObjectSchemas,
+			ImmutableMap<String, String> formats) {
 		this.descriptor = descriptor;
 		this.name = name;
 		ImmutableMap.Builder<String, FieldDescriptor> fieldsBuilder = ImmutableMap.builder();
@@ -156,6 +162,7 @@ public class NamedSchema implements Schema {
 		this.mappings = mappings;
 		this.descriptions = descriptions;
 		this.subObjectSchemas = subObjectSchemas;
+		this.formats = formats;
 	}
 
 	/**
@@ -175,8 +182,9 @@ public class NamedSchema implements Schema {
 				ImmutableMap.<String, String>of(),
 				CaseFormat.LOWER_CAMEL,
 				ImmutableMap.<String, String>of(),
-				ImmutableMap.<String, Transformer>of(),
+				ImmutableMap.<String, FormatTransformer>of(),
 				ImmutableMap.<String, FieldDescriptor>of(),
+				ImmutableMap.<String, String>of(),
 				ImmutableMap.<String, String>of(),
 				ImmutableMap.<String, String>of());
 	}
@@ -196,7 +204,7 @@ public class NamedSchema implements Schema {
 		skippedCopy.addAll(skippedFields);
 		skippedCopy.add(names);
 		return new NamedSchema(descriptor, name, skippedCopy.build(), constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemas);
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats);
 	}
 
 	/**
@@ -214,7 +222,7 @@ public class NamedSchema implements Schema {
 		constantsCopy.put(key, value);
 		return new NamedSchema(descriptor, name, skippedFields, constantsCopy.build(),
 				enumCaseFormat, substitutions, transforms, mappings, descriptions,
-				subObjectSchemas);
+				subObjectSchemas, formats);
 	}
 
 	/**
@@ -225,7 +233,7 @@ public class NamedSchema implements Schema {
 	 */
 	public NamedSchema enumCaseFormat(CaseFormat caseFormat) {
 		return new NamedSchema(descriptor, name, skippedFields, constants, caseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemas);
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats);
 	}
 
 	/**
@@ -245,7 +253,7 @@ public class NamedSchema implements Schema {
 		substitutionsCopy.putAll(substitutions);
 		substitutionsCopy.put(fieldName, substitution);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutionsCopy.build(), transforms, mappings, descriptions, subObjectSchemas);
+				substitutionsCopy.build(), transforms, mappings, descriptions, subObjectSchemas, formats);
 	}
 
 	/**
@@ -255,15 +263,26 @@ public class NamedSchema implements Schema {
 	 * @param transformer the transformation to apply
 	 */
 	public NamedSchema transform(String fieldName, Transformer transformer) {
+		return transform(fieldName, Transformers.format(transformer));
+	}
+	
+	/**
+	 * Returns a schema that will transforms the given field's value, with an
+	 * added format specified in the resulting JSON Schema.
+	 *
+	 * @param fieldName the name of the field to transform
+	 * @param transformer the transformation to apply
+	 */
+	public NamedSchema transform(String fieldName, FormatTransformer transformer) {
 		Preconditions.checkNotNull(fieldName);
 		Preconditions.checkArgument(has(fieldName));
 		Preconditions.checkNotNull(transformer);
-		ImmutableMap.Builder<String, Transformer> transformsCopy = ImmutableMap.builder();
+		ImmutableMap.Builder<String, FormatTransformer> transformsCopy = ImmutableMap.builder();
 		transformsCopy.putAll(transforms);
 		transformsCopy.put(fieldName, transformer);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
 				substitutions, transformsCopy.build(), mappings, descriptions,
-				subObjectSchemas);
+				subObjectSchemas, formats);
 	}
 
 	/**
@@ -275,16 +294,16 @@ public class NamedSchema implements Schema {
 	 * a list would be serialized as:<pre>{@code
 	 *
 	 * "users": [
-	 * 		{"username": "lrichie", name: "Lionel Richie"},
-	 * 		{"username": "stwain", "name": "Shania Twain"}
+	 *		{"username": "lrichie", name: "Lionel Richie"},
+	 *		{"username": "stwain", "name": "Shania Twain"}
 	 * ]}</pre>
 	 *
 	 * <p>A common JSON idiom is to represent such collections as pseudo-maps,
-	 *  i.e.objects with non-predefined keys:<pre>{@code
+	 *	i.e.objects with non-predefined keys:<pre>{@code
 	 *
 	 * "users": {
-	 * 	"lrichie": {"name": "Lionel Richie"},
-	 *  "stwain": {"name": "Shania Twain"}
+	 *	"lrichie": {"name": "Lionel Richie"},
+	 *	"stwain": {"name": "Shania Twain"}
 	 * }}</pre>
 	 *
 	 * <p>To achieve this effect, call this method with {@code "users"} and
@@ -317,7 +336,7 @@ public class NamedSchema implements Schema {
 		mappingsCopy.put(fieldName, keyField);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
 				substitutions, transforms, mappingsCopy.build(), descriptions,
-				subObjectSchemas);
+				subObjectSchemas, formats);
 	}
 
 	/**
@@ -334,7 +353,7 @@ public class NamedSchema implements Schema {
 		descriptionsCopy.putAll(descriptions);
 		descriptionsCopy.put(fieldName, description);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptionsCopy.build(), subObjectSchemas);
+				substitutions, transforms, mappings, descriptionsCopy.build(), subObjectSchemas, formats);
 	}
 
 	/**
@@ -357,7 +376,27 @@ public class NamedSchema implements Schema {
 		subObjectSchemasCopy.putAll(subObjectSchemas);
 		subObjectSchemasCopy.put(fieldName, schemaName);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemasCopy.build());
+				substitutions, transforms, mappings, descriptions, subObjectSchemasCopy.build(), formats);
+	}
+	
+	/**
+	 * Returns a new schema in which the given field with have a format
+	 * attribute.
+	 * 
+	 * @param fieldName the name of the field to specify a format for
+	 * @param format the format of the property
+	 */
+	public NamedSchema setFormat(String fieldName, String format) {
+		Preconditions.checkNotNull(fieldName);
+		Preconditions.checkNotNull(format);
+		Preconditions.checkArgument(!format.isEmpty()
+				&& !CharMatcher.WHITESPACE.matchesAllOf(format));
+		Preconditions.checkState(has(fieldName));
+		ImmutableMap.Builder<String, String> formatsCopy = ImmutableMap.builder();
+		formatsCopy.putAll(formats);
+		formatsCopy.put(fieldName, format);
+		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formatsCopy.build());
 	}
 
 	/**
@@ -500,7 +539,7 @@ public class NamedSchema implements Schema {
 	 * Returns the transforms to apply to the values, keyed by field name.
 	 */
 	public ImmutableMap<String, Transformer> getTransforms() {
-		return transforms;
+		return ImmutableMap.<String, Transformer>copyOf(transforms);
 	}
 
 	/**
@@ -524,10 +563,16 @@ public class NamedSchema implements Schema {
 	public ImmutableMap<String, String> getSubObjectsSchemas() {
 		return subObjectSchemas;
 	}
+	
+	/**
+	 * Returns the formats of individual object fields.
+	 */
+	public ImmutableMap<String, String> getFormats() {
+		return formats;
+	}
 
 	/**
-	 * Returns a new serializer that implements the rules configured in this
-	 * schema for generating JSON content.
+	 * {@inheritDoc}
 	 */
 	@Override
 	public Serializer getSerializer() {
@@ -535,8 +580,7 @@ public class NamedSchema implements Schema {
 	}
 
 	/**
-	 * Returns a new parser that implements the rules configured in this
-	 * schema for reading JSON content.
+	 * {@inheritDoc}
 	 */
 	@Override
 	public Parser getParser() {
@@ -544,11 +588,7 @@ public class NamedSchema implements Schema {
 	}
 
 	/**
-	 * Returns the JSON+Schema representation of this schema.
-	 *
-	 * @param schemas the set of schemas defined elsewhere, used for linking
-	 * to the schemas of sub-messages referenced in this schema
-	 * @throws JsonSchemaException
+	 * {@inheritDoc}
 	 */
 	@Override
 	public JsonSchema getJsonSchema(ReadableSchemaRegistry schemas) throws JsonSchemaException {
@@ -572,102 +612,57 @@ public class NamedSchema implements Schema {
 				continue;
 			}
 			FieldDescriptor field = fieldEntry.getValue();
+			
 			JsonSchema.Builder property = JsonSchema.newBuilder();
+
+			// Start with the simple stuff: description, required, format, default
 			if (descriptions.containsKey(field.getName())) {
 				property.setDescription(descriptions.get(field.getName()));
 			}
 
+			if (field.hasDefaultValue()) {
+				if (field.getType().equals(Type.ENUM)) {
+					EnumValueDescriptor defaultValue = (EnumValueDescriptor) field.getDefaultValue();
+					property.setDefault(PROTO_ENUM_CASE_FORMAT.to(
+							enumCaseFormat, defaultValue.getName()));
+				} else {
+					property.setDefault(field.getDefaultValue().toString());
+				}
+			}
+			
+			if (field.isRequired()) {
+				property.setRequired(true);
+			}
+			
+			if (formats.containsKey(field.getName())) {
+				property.setFormat(formats.get(field.getName()));
+			} else if (transforms.containsKey(field.getName())) {
+				String transformedFormat = transforms.get(field.getName()).getExternalFormat();
+				if (transformedFormat != null) {
+					property.setFormat(transformedFormat);
+				}
+			}
+
 			property.setName(getPropertyName(fieldEntry.getKey()));
 
+			// This is where most of the work happens. This block of code
+			// determines the correct type of the property, and sets the schema
+			// references for objects.
 			if (field.isRepeated()) {
 				if (field.getType().equals(Type.MESSAGE)) {
 					if (mappings.containsKey(field.getName())) {
-						property.setType(JsonType.OBJECT);
-
-						if (subObjectSchemas.containsKey(field.getName())) {
-							String schemaName = subObjectSchemas.get(field.getName());
-							if (!schemas.contains(schemaName)) {
-								throw new IllegalStateException();
-							}
-							// TODO(jsilland): validate type!
-							property.setAdditionalProperties(
-									JsonSchema.newBuilder().setSchemaReference(schemaName));
-
-						} else {
-							try {
-								property = schemas.get(field.getMessageType())
-										.getJsonSchema(schemas).toBuilder();
-							} catch (SchemaObtentionException soe) {
-								throw new JsonSchemaException(soe);
-							}
-						}
+						populateMappedFieldSchema(field, property, schemas);
 					} else {
-						property.setType(JsonType.ARRAY);
-						if (subObjectSchemas.containsKey(field.getName())) {
-							String schemaName = subObjectSchemas.get(field.getName());
-							if (!schemas.contains(schemaName)) {
-								throw new JsonSchemaException(new IllegalStateException(
-										String.format("Schema %s refers to schema %s to format"
-												+ " field %s but no such schema can be found in "
-												+ "the registry", getName(), schemaName,
-												field.getName())));
-							}
-							if (!schemas.get(schemaName).getDescriptor().getFullName()
-									.equals(field.getMessageType().getFullName())) {
-								throw new JsonSchemaException(new IllegalStateException(
-										String.format("Schema %s refers to schema %s to format"
-												+ " field %s but types do no match", getName(), schemaName,
-												field.getName())));
-							}
-							property.setItems(JsonSchema.newBuilder().setSchemaReference(
-									schemaName));
-						} else {
-							try {
-								property.setItems(schemas.get(field.getMessageType())
-										.getJsonSchema(schemas));
-							} catch (SchemaObtentionException soe) {
-								throw new JsonSchemaException(soe);
-							}
-						}
+						populateRepeatedObjectSchema(field, property, schemas);
 					}
 				} else {
-					property.setType(JsonType.ARRAY);
-					property.setItems(JsonSchema.newBuilder().setType(getReifiedFieldType(field)));
-					if (field.getType().equals(Type.ENUM)) {
-						for (EnumValueDescriptor enumValue : field.getEnumType().getValues()) {
-							property.addEnum(PROTO_ENUM_CASE_FORMAT.to(
-									enumCaseFormat, enumValue.getName()));
-						}
-					}
+					populateRepeatedPrimitiveSchema(field, property);
 				}
 			} else {
 				if (field.getType().equals(Type.MESSAGE)) {
-					if (subObjectSchemas.containsKey(field.getName())) {
-						String schemaName = subObjectSchemas.get(field.getName());
-						if (!schemas.contains(schemaName)) {
-							throw new JsonSchemaException(new IllegalStateException(
-									String.format("Schema %s refers to schema %s to format"
-											+ " field %s but no such schema can be found in "
-											+ "the registry", getName(), schemaName,
-											field.getName())));
-						}
-						if (!schemas.get(schemaName).getDescriptor().getFullName()
-								.equals(field.getMessageType().getFullName())) {
-							throw new JsonSchemaException(new IllegalStateException(
-									String.format("Schema %s refers to schema %s to format"
-											+ " field %s but types do no match", getName(),
-											schemaName, field.getName())));
-						}
-						property.setSchemaReference(schemaName);
-					} else {
-						try {
-							property = schemas.get(field.getMessageType())
-									.getJsonSchema(schemas).toBuilder();
-						} catch (SchemaObtentionException soe) {
-							throw new JsonSchemaException(soe);
-						}
-					}
+					populateObjectSchema(field, property, schemas);
 				} else {
+					// Regular primitive field
 					if (field.getType().equals(Type.ENUM)) {
 						for (EnumValueDescriptor enumValue : field.getEnumType().getValues()) {
 							property.addEnum(PROTO_ENUM_CASE_FORMAT.to(
@@ -681,5 +676,128 @@ public class NamedSchema implements Schema {
 			schema.addProperties(property);
 		}
 		return schema.build();
+	}
+
+	/**
+	 * Populates a JSON Schema for a repeated, mapped object field.
+	 * 
+	 * @param field the proto field considered
+	 * @param property the JSON schema being built
+	 * @param schemas the set of known schemas
+	 * @throws JsonSchemaException
+	 */
+	private void populateMappedFieldSchema(FieldDescriptor field,
+			JsonSchema.Builder property, ReadableSchemaRegistry schemas) throws JsonSchemaException {
+		property.setType(JsonType.OBJECT);
+		if (subObjectSchemas.containsKey(field.getName())) {
+			String schemaName = subObjectSchemas.get(field.getName());
+			if (!schemas.contains(schemaName)) {
+				throw new IllegalStateException();
+			}
+			// TODO(jsilland): validate type!
+			property.setAdditionalProperties(
+					JsonSchema.newBuilder().setSchemaReference(schemaName));
+
+		} else {
+			try {
+				property = schemas.get(field.getMessageType())
+						.getJsonSchema(schemas).toBuilder();
+			} catch (SchemaObtentionException soe) {
+				throw new JsonSchemaException(soe);
+			}
+		}
+	}
+	
+	/**
+	 * Populates a JSON Schema for a repeated object field.
+	 * 
+	 * @param field the proto field for which a JSON Schema whould be generated
+	 * @param property the property being built
+	 * @param schemas the set of known schemas
+	 * @throws JsonSchemaException
+	 */
+	private void populateRepeatedObjectSchema(FieldDescriptor field, JsonSchema.Builder property,
+			ReadableSchemaRegistry schemas) throws JsonSchemaException {
+		property.setType(JsonType.ARRAY);
+		if (subObjectSchemas.containsKey(field.getName())) {
+			String schemaName = subObjectSchemas.get(field.getName());
+			if (!schemas.contains(schemaName)) {
+				throw new JsonSchemaException(new IllegalStateException(
+						String.format("Schema %s refers to schema %s to format"
+								+ " field %s but no such schema can be found in "
+								+ "the registry", getName(), schemaName,
+								field.getName())));
+			}
+			if (!schemas.get(schemaName).getDescriptor().getFullName()
+					.equals(field.getMessageType().getFullName())) {
+				throw new JsonSchemaException(new IllegalStateException(
+						String.format("Schema %s refers to schema %s to format"
+								+ " field %s but types do no match", getName(), schemaName,
+								field.getName())));
+			}
+			property.setItems(JsonSchema.newBuilder().setSchemaReference(
+					schemaName));
+		} else {
+			try {
+				property.setItems(schemas.get(field.getMessageType())
+						.getJsonSchema(schemas));
+			} catch (SchemaObtentionException soe) {
+				throw new JsonSchemaException(soe);
+			}
+		}
+	}
+	
+	/**
+	 * Populates a JSON schema for a repeated primitive proto field.
+	 * 
+	 * @param field the field being considered
+	 * @param property the JSON schema being built
+	 */
+	private void populateRepeatedPrimitiveSchema(FieldDescriptor field, JsonSchema.Builder property) {
+		property.setType(JsonType.ARRAY);
+		property.setItems(JsonSchema.newBuilder().setType(getReifiedFieldType(field)));
+		if (field.getType().equals(Type.ENUM)) {
+			for (EnumValueDescriptor enumValue : field.getEnumType().getValues()) {
+				property.addEnum(PROTO_ENUM_CASE_FORMAT.to(
+						enumCaseFormat, enumValue.getName()));
+			}
+		}
+	}
+	
+	/**
+	 * Populates a JSON schema for a non-repeated object proto field.
+	 * 
+	 * @param field the field being considered
+	 * @param property the JSON Schema being built
+	 * @param schemas the set of known schemas
+	 * @throws JsonSchemaException
+	 */
+	private void populateObjectSchema(FieldDescriptor field,
+			JsonSchema.Builder property, ReadableSchemaRegistry schemas) throws JsonSchemaException {
+		if (subObjectSchemas.containsKey(field.getName())) {
+			String schemaName = subObjectSchemas.get(field.getName());
+			if (!schemas.contains(schemaName)) {
+				throw new JsonSchemaException(new IllegalStateException(
+						String.format("Schema %s refers to schema %s to format"
+								+ " field %s but no such schema can be found in "
+								+ "the registry", getName(), schemaName,
+								field.getName())));
+			}
+			if (!schemas.get(schemaName).getDescriptor().getFullName()
+					.equals(field.getMessageType().getFullName())) {
+				throw new JsonSchemaException(new IllegalStateException(
+						String.format("Schema %s refers to schema %s to format"
+								+ " field %s but types do no match", getName(),
+								schemaName, field.getName())));
+			}
+			property.setSchemaReference(schemaName);
+		} else {
+			try {
+				property = schemas.get(field.getMessageType())
+						.getJsonSchema(schemas).toBuilder();
+			} catch (SchemaObtentionException soe) {
+				throw new JsonSchemaException(soe);
+			}
+		}
 	}
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,6 +49,9 @@ public final class JsonSchemas {
 			.describe("additional_properties",
 					"If this the schema for an object, this property defines a schema for the " +
 					"dynamic keys of that object")
-			.describe("properties", "The properties of this object");
+			.describe("properties", "The properties of this object")
+			.describe("required", "Whether the property is required")
+			.describe("default", "The default value of the property")
+			.describe("format", "Additional information about the format of the property");
 
 }

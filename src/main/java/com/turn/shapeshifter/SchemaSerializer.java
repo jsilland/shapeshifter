@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,8 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 
 /**
- * Implementation of {@link Serializer} based on the configuration of a {@link NamedSchema}
+ * Implementation of {@link Serializer} based on the configuration of a
+ * {@link NamedSchema}
  *
  * @author jsilland
  */
@@ -40,22 +41,17 @@ class SchemaSerializer implements Serializer {
 
 	private final NamedSchema schema;
 
+	/**
+	 * Returns a new serializer that will use the given schema.
+	 * 
+	 * @param schema a configured schema
+	 */
 	SchemaSerializer(NamedSchema schema) {
 		this.schema = schema;
 	}
 
 	/**
-	 * Returns a JSON representation of {@code message}.
-	 *
-	 * This variation allows for the inclusion of schemas for serializing sub-objects that may
-	 * appear in {@code message}. If no suitable schema is found in the registry, a schema with
-	 * default settings is generated on the fly and saved in the registry, scoped in
-	 * {@code this} instance.
-	 *
-	 * @param message the message to format.
-	 * @param registry a registry of previously existing schemas used for serializing sub-objects.
-	 * @throws SerializationException
-	 * @see SchemaRegistry#register(NamedSchema, String, NamedSchema)
+	 * {@inheritDoc}
 	 */
 	@Override
 	public JsonNode serialize(Message message, ReadableSchemaRegistry registry)
@@ -152,7 +148,7 @@ class SchemaSerializer implements Serializer {
 	 * @param value the value to represent in JSON
 	 * @param field the descriptor of the value's field.
 	 * @param schemas a container for object schemas to use for formatting fields that refer to
-	 *            other messages
+	 *						other messages
 	 * @throws SerializationException
 	 */
 	private JsonNode serializeValue(Object value, FieldDescriptor field,

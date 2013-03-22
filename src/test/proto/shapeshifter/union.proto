@@ -35,6 +35,12 @@ message Union {
 
 message DefaultValue {
 	optional string string_value = 1 [default = "foo"];
+	optional int32 int_value = 2 [default = 42];
+	optional SomeEnum enum_value = 3 [default = SECOND];
+}
+
+message RequiredValue {
+	required string required_string = 1;
 }
 
 enum Genre {

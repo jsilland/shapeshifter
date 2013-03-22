@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +38,7 @@ public class JsonSchemasTest {
 		JsonSchema metaSchema = JsonSchemas.SCHEMA.getJsonSchema(registry);
 		JsonNode metaSchemaNode = JsonSchemas.SCHEMA.getSerializer().serialize(
 				metaSchema, registry);
-				
+		
 		Assert.assertTrue(metaSchemaNode.isObject());
 		Assert.assertTrue(metaSchemaNode.has("id"));
 		Assert.assertEquals("JsonSchema", metaSchemaNode.get("id").asText());
@@ -84,5 +84,18 @@ public class JsonSchemasTest {
 		Assert.assertTrue(properties.get("enum").isObject());
 		Assert.assertEquals("array", properties.get("enum").get("type").asText());
 		Assert.assertEquals("string", properties.get("enum").get("items").get("type").asText());
+		
+		Assert.assertTrue(properties.has("required"));
+		Assert.assertTrue(properties.get("required").isObject());
+		Assert.assertEquals("boolean", properties.get("required").get("type").asText());
+		Assert.assertEquals("false", properties.get("required").get("default").asText());
+		
+		Assert.assertTrue(properties.has("default"));
+		Assert.assertTrue(properties.get("default").isObject());
+		Assert.assertEquals("string", properties.get("default").get("type").asText());
+		
+		Assert.assertTrue(properties.has("format"));
+		Assert.assertTrue(properties.get("format").isObject());
+		Assert.assertEquals("string", properties.get("format").get("type").asText());
 	}
 }

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,11 +39,11 @@ import com.google.protobuf.Descriptors.FieldDescriptor.Type;
  * {@link Serializer} returned by an instance of this class. Namely:
  *
  * <ul>
- * 	<li>Field names are converted between Protocol Buffer
- * 	{@code lower_underscore} to JSON's {@code camelCase}.
- *  <li>Enum names are converted between {@code PROTO_FORMAT} and
- *   {@code jsonFormat}.
- *  <li>Empty arrays and objects without properties are ignored
+ *	<li>Field names are converted between Protocol Buffer
+ *	{@code lower_underscore} to JSON's {@code camelCase}.
+ *	<li>Enum names are converted between {@code PROTO_FORMAT} and
+ *	 {@code jsonFormat}.
+ *	<li>Empty arrays and objects without properties are ignored
  * </ul>
  *
  * <p>An instance of {@code AutoSchema} is anonymous and defined uniquely by
@@ -63,12 +63,12 @@ import com.google.protobuf.Descriptors.FieldDescriptor.Type;
  * the descriptor for a message named ProtoA, an exception will be thrown when:
  *
  * <ul>
- * 	<li>ProtoA contains a field of type ProtoA
- * 	<li>ProtoA contains a field a type ProtoB, and ProtoB contains a field of
- * 	type ProtoA.
- * 	<li>More generally when there exists a chain of fields between ProtoA and
- * 	ProtoX, and ProtoX refers to any message type that is part of that chain,
- * 	including ProtoA and ProtoX themselves.
+ *	<li>ProtoA contains a field of type ProtoA
+ *	<li>ProtoA contains a field a type ProtoB, and ProtoB contains a field of
+ *	type ProtoA.
+ *	<li>More generally when there exists a chain of fields between ProtoA and
+ *	ProtoX, and ProtoX refers to any message type that is part of that chain,
+ *	including ProtoA and ProtoX themselves.
  * </ul>
  *
  * @author jsilland
@@ -134,6 +134,21 @@ public class AutoSchema implements Schema {
 			JsonSchema.Builder property = JsonSchema.newBuilder();
 			property.setName(PROTO_FIELD_CASE_FORMAT.to(JSON_FIELD_CASE_FORMAT, field.getName()));
 
+			if (field.hasDefaultValue()) {
+				if (field.getType().equals(Type.ENUM)) {
+					EnumValueDescriptor defaultValue = (EnumValueDescriptor) field.getDefaultValue();
+					property.setDefault(PROTO_ENUM_CASE_FORMAT.to(
+							JSON_ENUM_CASE_FORMAT, defaultValue.getName()));
+				} else {
+					property.setDefault(field.getDefaultValue().toString());
+				}
+			}
+			
+			if (field.isRequired()) {
+				property.setRequired(true);
+			}
+			
+			
 			if (field.isRepeated()) {
 				property.setType(JsonType.ARRAY);
 				if (field.getType().equals(Type.MESSAGE)) {
