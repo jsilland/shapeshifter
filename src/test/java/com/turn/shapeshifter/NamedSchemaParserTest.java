@@ -256,4 +256,22 @@ public class NamedSchemaParserTest {
 				.parse(result, registry)).build();
 		Assert.assertEquals(actor, parsed);
 	}
+
+	@Test
+	public void testLongAsString() throws Exception {
+		NamedSchema schema = NamedSchema.of(Union.getDescriptor(), "Union")
+				.surfaceLongsAsStrings()
+				.useSchema("union_value", "Union")
+				.useSchema("union_repeated", "Union");
+
+		Union union = Union.newBuilder().setInt64Value(1234567890L)
+				.addInt64Repeated(1234567).build();
+		SchemaRegistry registry = new SchemaRegistry();
+		registry.register(schema);
+		JsonNode result = schema.getSerializer().serialize(union, registry);
+		Union parsed = Union.newBuilder().mergeFrom(new NamedSchemaParser(schema).parse(
+				result, registry)).build();
+		Assert.assertEquals(1234567890L, parsed.getInt64Value());
+		Assert.assertEquals(1234567L, (long) parsed.getInt64RepeatedList().get(0));
+	}
 }

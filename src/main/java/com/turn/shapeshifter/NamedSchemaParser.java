@@ -192,8 +192,14 @@ public class NamedSchemaParser implements Parser {
 		case SFIXED64:
 		case SINT64:
 		case UINT64:
-			JsonTokens.checkJsonValueConformance(jsonNode, JsonTokens.VALID_INTEGER_TOKENS);
-			value = new Long(jsonNode.asLong());
+			if (schema.getSurfaceLongsAsStrings()) {
+				JsonTokens.checkJsonValueConformance(jsonNode, JsonTokens.VALID_STRING_TOKENS);
+				String longValue = jsonNode.asText();
+				value = Long.parseLong(longValue);
+			} else {
+				JsonTokens.checkJsonValueConformance(jsonNode, JsonTokens.VALID_INTEGER_TOKENS);
+				value = new Long(jsonNode.asLong());
+			}
 			break;
 		case MESSAGE:
 			if (!jsonNode.isObject()) {

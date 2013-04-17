@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
 import com.google.protobuf.Descriptors.FieldDescriptor.Type;
 import com.google.protobuf.Message;
 
@@ -94,6 +95,11 @@ import com.google.protobuf.Message;
  */
 public class NamedSchema implements Schema {
 
+	/**
+	 * 
+	 */
+	private static final String LONG_STRING_FORMAT = "int64";
+
 	// This is the presumed case format for the values of an enum
 	// defined in a protocol buffer.
 	// TODO(jsilland): make this configurable
@@ -111,6 +117,7 @@ public class NamedSchema implements Schema {
 	private final ImmutableMap<String, String> descriptions;
 	private final ImmutableMap<String, String> subObjectSchemas;
 	private final ImmutableMap<String, String> formats;
+	private final boolean treatLongsAsStrings;
 
 	/**
 	 * Private constructor. External clients should use
@@ -135,6 +142,8 @@ public class NamedSchema implements Schema {
 	 * @param subObjectSchemas the mapping of references to other schemas, in
 	 * case the field is an object
 	 * @param formats the fields' formats metadata
+	 * @param treatLongsAsStrings whether {@code long} fields should be
+	 * externally represented as strings.
 	 */
 	private NamedSchema(Descriptor descriptor,
 			String name,
@@ -146,7 +155,8 @@ public class NamedSchema implements Schema {
 			ImmutableMap<String, FieldDescriptor> mappings,
 			ImmutableMap<String, String> descriptions,
 			ImmutableMap<String, String> subObjectSchemas,
-			ImmutableMap<String, String> formats) {
+			ImmutableMap<String, String> formats,
+			boolean treatLongsAsStrings) {
 		this.descriptor = descriptor;
 		this.name = name;
 		ImmutableMap.Builder<String, FieldDescriptor> fieldsBuilder = ImmutableMap.builder();
@@ -163,6 +173,7 @@ public class NamedSchema implements Schema {
 		this.descriptions = descriptions;
 		this.subObjectSchemas = subObjectSchemas;
 		this.formats = formats;
+		this.treatLongsAsStrings = treatLongsAsStrings;
 	}
 
 	/**
@@ -186,7 +197,8 @@ public class NamedSchema implements Schema {
 				ImmutableMap.<String, FieldDescriptor>of(),
 				ImmutableMap.<String, String>of(),
 				ImmutableMap.<String, String>of(),
-				ImmutableMap.<String, String>of());
+				ImmutableMap.<String, String>of(),
+				false);
 	}
 
 	/**
@@ -204,7 +216,8 @@ public class NamedSchema implements Schema {
 		skippedCopy.addAll(skippedFields);
 		skippedCopy.add(names);
 		return new NamedSchema(descriptor, name, skippedCopy.build(), constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats);
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats,
+				treatLongsAsStrings);
 	}
 
 	/**
@@ -222,7 +235,7 @@ public class NamedSchema implements Schema {
 		constantsCopy.put(key, value);
 		return new NamedSchema(descriptor, name, skippedFields, constantsCopy.build(),
 				enumCaseFormat, substitutions, transforms, mappings, descriptions,
-				subObjectSchemas, formats);
+				subObjectSchemas, formats, treatLongsAsStrings);
 	}
 
 	/**
@@ -233,7 +246,8 @@ public class NamedSchema implements Schema {
 	 */
 	public NamedSchema enumCaseFormat(CaseFormat caseFormat) {
 		return new NamedSchema(descriptor, name, skippedFields, constants, caseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats);
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats,
+				treatLongsAsStrings);
 	}
 
 	/**
@@ -253,7 +267,8 @@ public class NamedSchema implements Schema {
 		substitutionsCopy.putAll(substitutions);
 		substitutionsCopy.put(fieldName, substitution);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutionsCopy.build(), transforms, mappings, descriptions, subObjectSchemas, formats);
+				substitutionsCopy.build(), transforms, mappings, descriptions, subObjectSchemas, formats,
+				treatLongsAsStrings);
 	}
 
 	/**
@@ -282,7 +297,7 @@ public class NamedSchema implements Schema {
 		transformsCopy.put(fieldName, transformer);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
 				substitutions, transformsCopy.build(), mappings, descriptions,
-				subObjectSchemas, formats);
+				subObjectSchemas, formats, treatLongsAsStrings);
 	}
 
 	/**
@@ -336,7 +351,7 @@ public class NamedSchema implements Schema {
 		mappingsCopy.put(fieldName, keyField);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
 				substitutions, transforms, mappingsCopy.build(), descriptions,
-				subObjectSchemas, formats);
+				subObjectSchemas, formats, treatLongsAsStrings);
 	}
 
 	/**
@@ -353,7 +368,8 @@ public class NamedSchema implements Schema {
 		descriptionsCopy.putAll(descriptions);
 		descriptionsCopy.put(fieldName, description);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptionsCopy.build(), subObjectSchemas, formats);
+				substitutions, transforms, mappings, descriptionsCopy.build(), subObjectSchemas, formats,
+				treatLongsAsStrings);
 	}
 
 	/**
@@ -376,7 +392,8 @@ public class NamedSchema implements Schema {
 		subObjectSchemasCopy.putAll(subObjectSchemas);
 		subObjectSchemasCopy.put(fieldName, schemaName);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemasCopy.build(), formats);
+				substitutions, transforms, mappings, descriptions, subObjectSchemasCopy.build(), formats,
+				treatLongsAsStrings);
 	}
 	
 	/**
@@ -396,7 +413,23 @@ public class NamedSchema implements Schema {
 		formatsCopy.putAll(formats);
 		formatsCopy.put(fieldName, format);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemas, formatsCopy.build());
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formatsCopy.build(),
+				treatLongsAsStrings);
+	}
+
+	/**
+	 * Returns a new schema in which {@code long} fields will be represented as
+	 * {@code string}.
+	 *
+	 * <p>This allows handling the full range of long values, which is greater
+	 * than the representable range of number in Javascript. Setting this option
+	 * will set the format of all long fields to {@code "int64"} as an indicator
+	 * for external tools.
+	 */
+	public NamedSchema surfaceLongsAsStrings() {
+		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
+				substitutions, transforms, mappings, descriptions, subObjectSchemas, formats,
+				true);
 	}
 
 	/**
@@ -572,6 +605,14 @@ public class NamedSchema implements Schema {
 	}
 
 	/**
+	 * Returns {@code true} if this schema surfaces {@code long} fields
+	 * as strings.
+	 */
+	public boolean getSurfaceLongsAsStrings() {
+		return treatLongsAsStrings;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -669,7 +710,14 @@ public class NamedSchema implements Schema {
 									enumCaseFormat, enumValue.getName()));
 						}
 					}
-					property.setType(getPropertyType(fieldEntry.getKey()));
+					// Special casing for longs when the user wants them treated as strings
+					if (treatLongsAsStrings && field.getJavaType().equals(JavaType.LONG)
+							&& !transforms.containsKey(field.getName())) {
+						property.setType(JsonType.STRING);
+						property.setFormat(LONG_STRING_FORMAT);
+					} else {
+						property.setType(getPropertyType(fieldEntry.getKey()));
+					}
 				}
 			}
 
@@ -755,7 +803,17 @@ public class NamedSchema implements Schema {
 	 */
 	private void populateRepeatedPrimitiveSchema(FieldDescriptor field, JsonSchema.Builder property) {
 		property.setType(JsonType.ARRAY);
-		property.setItems(JsonSchema.newBuilder().setType(getReifiedFieldType(field)));
+		JsonSchema.Builder itemsSchema = JsonSchema.newBuilder();
+		
+		if (treatLongsAsStrings && field.getJavaType().equals(JavaType.LONG)
+				&& !transforms.containsKey(field.getName())) {
+			itemsSchema.setType(JsonType.STRING);
+			itemsSchema.setFormat(LONG_STRING_FORMAT);
+		} else {
+			itemsSchema.setType(getReifiedFieldType(field));
+		}
+		property.setItems(itemsSchema);
+		
 		if (field.getType().equals(Type.ENUM)) {
 			for (EnumValueDescriptor enumValue : field.getEnumType().getValues()) {
 				property.addEnum(PROTO_ENUM_CASE_FORMAT.to(

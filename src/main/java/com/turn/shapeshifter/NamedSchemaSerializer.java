@@ -191,7 +191,8 @@ class NamedSchemaSerializer implements Serializer {
 		case SFIXED64:
 		case SINT64:
 		case UINT64:
-			valueNode = new LongNode((Long) value);
+			valueNode = schema.getSurfaceLongsAsStrings() ?
+					new TextNode(((Long) value).toString()) : new LongNode((Long) value);
 			break;
 		case MESSAGE:
 			Message messageValue = (Message) value;

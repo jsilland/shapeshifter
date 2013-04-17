@@ -282,4 +282,24 @@ public class NamedSchemaSerializerTest {
 		Assert.assertNotNull(movies.get("Star Wars"));
 		Assert.assertEquals(1978, movies.get("Star Wars").get("year").asInt());
 	}
+
+	@Test
+	public void testLongAsString() throws Exception {
+		NamedSchema schema = NamedSchema.of(Union.getDescriptor(), "Union")
+				.surfaceLongsAsStrings()
+				.useSchema("union_value", "Union")
+				.useSchema("union_repeated", "Union");
+
+		Union union = Union.newBuilder().setInt64Value(1234567890L)
+				.addInt64Repeated(1234567L).build();
+		SchemaRegistry registry = new SchemaRegistry();
+		registry.register(schema);
+		JsonNode result = schema.getSerializer().serialize(union, registry);
+		Assert.assertTrue(result.isObject());
+		Assert.assertEquals(JsonToken.VALUE_STRING, result.get("int64Value").asToken());
+		Assert.assertEquals("1234567890", result.get("int64Value").asText());
+		JsonNode arrayItem = result.get("int64Repeated").get(0);
+		Assert.assertEquals(JsonToken.VALUE_STRING, arrayItem.asToken());
+		Assert.assertEquals("1234567", arrayItem.asText());
+	}
 }
