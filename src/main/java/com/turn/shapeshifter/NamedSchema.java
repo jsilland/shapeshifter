@@ -96,9 +96,10 @@ import com.google.protobuf.Message;
 public class NamedSchema implements Schema {
 
 	/**
-	 * 
+	 * The format values to set on long field that should be treated as strings.
 	 */
-	private static final String LONG_STRING_FORMAT = "int64";
+	private static final String INT64_STRING_FORMAT = "int64";
+	private static final String UINT64_STRING_FORMAT = "uint64";
 
 	// This is the presumed case format for the values of an enum
 	// defined in a protocol buffer.
@@ -267,8 +268,8 @@ public class NamedSchema implements Schema {
 		substitutionsCopy.putAll(substitutions);
 		substitutionsCopy.put(fieldName, substitution);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutionsCopy.build(), transforms, mappings, descriptions, subObjectSchemas, formats,
-				treatLongsAsStrings);
+				substitutionsCopy.build(), transforms, mappings, descriptions, subObjectSchemas,
+				formats, treatLongsAsStrings);
 	}
 
 	/**
@@ -368,8 +369,8 @@ public class NamedSchema implements Schema {
 		descriptionsCopy.putAll(descriptions);
 		descriptionsCopy.put(fieldName, description);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptionsCopy.build(), subObjectSchemas, formats,
-				treatLongsAsStrings);
+				substitutions, transforms, mappings, descriptionsCopy.build(), subObjectSchemas,
+				formats, treatLongsAsStrings);
 	}
 
 	/**
@@ -392,8 +393,8 @@ public class NamedSchema implements Schema {
 		subObjectSchemasCopy.putAll(subObjectSchemas);
 		subObjectSchemasCopy.put(fieldName, schemaName);
 		return new NamedSchema(descriptor, name, skippedFields, constants, enumCaseFormat,
-				substitutions, transforms, mappings, descriptions, subObjectSchemasCopy.build(), formats,
-				treatLongsAsStrings);
+				substitutions, transforms, mappings, descriptions, subObjectSchemasCopy.build(),
+				formats, treatLongsAsStrings);
 	}
 	
 	/**
@@ -663,7 +664,8 @@ public class NamedSchema implements Schema {
 
 			if (field.hasDefaultValue()) {
 				if (field.getType().equals(Type.ENUM)) {
-					EnumValueDescriptor defaultValue = (EnumValueDescriptor) field.getDefaultValue();
+					EnumValueDescriptor defaultValue =
+							(EnumValueDescriptor) field.getDefaultValue();
 					property.setDefault(PROTO_ENUM_CASE_FORMAT.to(
 							enumCaseFormat, defaultValue.getName()));
 				} else {
@@ -714,7 +716,12 @@ public class NamedSchema implements Schema {
 					if (treatLongsAsStrings && field.getJavaType().equals(JavaType.LONG)
 							&& !transforms.containsKey(field.getName())) {
 						property.setType(JsonType.STRING);
-						property.setFormat(LONG_STRING_FORMAT);
+						if (field.getType().equals(Type.UINT64)
+								|| field.getType().equals(Type.FIXED64)) {
+							property.setFormat(UINT64_STRING_FORMAT);
+						} else {
+							property.setFormat(INT64_STRING_FORMAT);
+						}
 					} else {
 						property.setType(getPropertyType(fieldEntry.getKey()));
 					}
@@ -734,8 +741,8 @@ public class NamedSchema implements Schema {
 	 * @param schemas the set of known schemas
 	 * @throws JsonSchemaException
 	 */
-	private void populateMappedFieldSchema(FieldDescriptor field,
-			JsonSchema.Builder property, ReadableSchemaRegistry schemas) throws JsonSchemaException {
+	private void populateMappedFieldSchema(FieldDescriptor field, JsonSchema.Builder property,
+			ReadableSchemaRegistry schemas) throws JsonSchemaException {
 		property.setType(JsonType.OBJECT);
 		if (subObjectSchemas.containsKey(field.getName())) {
 			String schemaName = subObjectSchemas.get(field.getName());
@@ -801,14 +808,19 @@ public class NamedSchema implements Schema {
 	 * @param field the field being considered
 	 * @param property the JSON schema being built
 	 */
-	private void populateRepeatedPrimitiveSchema(FieldDescriptor field, JsonSchema.Builder property) {
+	private void populateRepeatedPrimitiveSchema(FieldDescriptor field,
+			JsonSchema.Builder property) {
 		property.setType(JsonType.ARRAY);
 		JsonSchema.Builder itemsSchema = JsonSchema.newBuilder();
 		
 		if (treatLongsAsStrings && field.getJavaType().equals(JavaType.LONG)
 				&& !transforms.containsKey(field.getName())) {
 			itemsSchema.setType(JsonType.STRING);
-			itemsSchema.setFormat(LONG_STRING_FORMAT);
+			if (field.getType().equals(Type.UINT64) || field.getType().equals(Type.FIXED64)) {
+				itemsSchema.setFormat(UINT64_STRING_FORMAT);
+			} else {
+				itemsSchema.setFormat(INT64_STRING_FORMAT);
+			}
 		} else {
 			itemsSchema.setType(getReifiedFieldType(field));
 		}
@@ -830,8 +842,8 @@ public class NamedSchema implements Schema {
 	 * @param schemas the set of known schemas
 	 * @throws JsonSchemaException
 	 */
-	private void populateObjectSchema(FieldDescriptor field,
-			JsonSchema.Builder property, ReadableSchemaRegistry schemas) throws JsonSchemaException {
+	private void populateObjectSchema(FieldDescriptor field, JsonSchema.Builder property,
+			ReadableSchemaRegistry schemas) throws JsonSchemaException {
 		if (subObjectSchemas.containsKey(field.getName())) {
 			String schemaName = subObjectSchemas.get(field.getName());
 			if (!schemas.contains(schemaName)) {

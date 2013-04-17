@@ -130,7 +130,7 @@ public class NamedSchemaTest {
 		
 		Assert.assertEquals("Union", jsonSchema.getId());
 		
-		Assert.assertEquals(9, jsonSchema.getPropertiesCount());
+		Assert.assertEquals(10, jsonSchema.getPropertiesCount());
 		Map<String, JsonSchema> properties = Maps.newHashMap();
 		for (JsonSchema property : jsonSchema.getPropertiesList()) {
 			properties.put(property.getName(), property);
@@ -198,7 +198,7 @@ public class NamedSchemaTest {
 		JsonSchema jsonSchema = schema.getJsonSchema(registry);
 		
 		Assert.assertEquals("Union", jsonSchema.getId());
-		Assert.assertEquals(8, jsonSchema.getPropertiesCount());
+		Assert.assertEquals(9, jsonSchema.getPropertiesCount());
 	}
 	
 	@Test
@@ -212,7 +212,7 @@ public class NamedSchemaTest {
 		JsonSchema jsonSchema = schema.getJsonSchema(registry);
 		
 		Assert.assertEquals("Union", jsonSchema.getId());
-		Assert.assertEquals(10, jsonSchema.getPropertiesCount());
+		Assert.assertEquals(11, jsonSchema.getPropertiesCount());
 	}
 	
 	@Test
@@ -407,9 +407,13 @@ public class NamedSchemaTest {
 				Assert.assertEquals("int64", items.getFormat());
 				Assert.assertEquals(JsonType.STRING, items.getType());
 				checks++;
+			} else if (property.getName().equals("uint64Value")) {
+				Assert.assertEquals("uint64", property.getFormat());
+				Assert.assertEquals(JsonType.STRING, property.getType());
+				checks++;
 			}
 		}
-		Assert.assertEquals(2, checks);
+		Assert.assertEquals(3, checks);
 	}
 
 }
