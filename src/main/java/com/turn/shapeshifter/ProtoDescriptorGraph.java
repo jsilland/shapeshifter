@@ -93,16 +93,7 @@ class ProtoDescriptorGraph {
 				strongConnect(descriptor, index, links, stack, sccs);
 			}
 		}
-		
-		for (List<Descriptor> scc : sccs) {
-			System.out.println(Lists.transform(scc, new Function<Descriptor, String>() {
-				
-				public String apply(Descriptor d) {
-					return d.getName();
-				}
-			}));
-		}
-		
+
 		return !sccs.isEmpty();
 	}
 	

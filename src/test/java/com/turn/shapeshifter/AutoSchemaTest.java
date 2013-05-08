@@ -105,7 +105,6 @@ public class AutoSchemaTest {
 	@Test
 	public void testIsDescriptorLooping() {
 		Assert.assertTrue(AutoSchema.isDescriptorLooping(Bar.getDescriptor()));
-		System.out.println(ProtoDescriptorGraph.of(Union.getDescriptor()).toString());
 		Assert.assertTrue(AutoSchema.isDescriptorLooping(Union.getDescriptor()));
 	}
 	
