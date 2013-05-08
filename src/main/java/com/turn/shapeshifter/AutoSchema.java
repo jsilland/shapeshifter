@@ -18,11 +18,8 @@ package com.turn.shapeshifter;
 import com.turn.shapeshifter.ShapeshifterProtos.JsonSchema;
 import com.turn.shapeshifter.ShapeshifterProtos.JsonType;
 
-import java.util.Set;
-
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
@@ -239,25 +236,6 @@ public class AutoSchema implements Schema {
 	}
 
 	static boolean isDescriptorLooping(Descriptors.Descriptor descriptor) {
-		return isDescriptorLooping(descriptor, Sets.newHashSet(descriptor));
-	}
-
-	private static boolean isDescriptorLooping(Descriptors.Descriptor descriptor,
-			Set<Descriptors.Descriptor> visited) {
-		for (FieldDescriptor field : descriptor.getFields()) {
-			if (Type.MESSAGE.equals(field.getType())) {
-				Descriptors.Descriptor subDescriptor = field.getMessageType();
-				if (visited.contains(subDescriptor)) {
-					return true;
-				} else {
-					visited.add(subDescriptor);
-				}
-				boolean subLoop = isDescriptorLooping(subDescriptor, visited);
-				if (subLoop) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return ProtoDescriptorGraph.of(descriptor).isLooping();
 	}
 }

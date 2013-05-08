@@ -75,3 +75,21 @@ message Baz {
 	optional Bar bar = 1;
 	optional Foo foo = 2;
 }
+
+message Qux {
+	optional Movie first = 1;
+	optional Movie second = 2;
+}
+
+message Quux {
+	optional Movie movie = 1;
+}
+
+message Corge {
+	optional Movie movie = 1;
+}
+
+message Ga {
+	optional Quux quux = 1;
+	optional Corge corge = 2;
+}

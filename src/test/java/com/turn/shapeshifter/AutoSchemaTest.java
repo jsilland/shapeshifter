@@ -21,7 +21,9 @@ import com.turn.shapeshifter.testing.TestProtos.Actor;
 import com.turn.shapeshifter.testing.TestProtos.Bar;
 import com.turn.shapeshifter.testing.TestProtos.DefaultValue;
 import com.turn.shapeshifter.testing.TestProtos.Foo;
+import com.turn.shapeshifter.testing.TestProtos.Ga;
 import com.turn.shapeshifter.testing.TestProtos.Movie;
+import com.turn.shapeshifter.testing.TestProtos.Qux;
 import com.turn.shapeshifter.testing.TestProtos.RequiredValue;
 import com.turn.shapeshifter.testing.TestProtos.Union;
 
@@ -103,6 +105,8 @@ public class AutoSchemaTest {
 	@Test
 	public void testIsDescriptorLooping() {
 		Assert.assertTrue(AutoSchema.isDescriptorLooping(Bar.getDescriptor()));
+		System.out.println(ProtoDescriptorGraph.of(Union.getDescriptor()).toString());
+		Assert.assertTrue(AutoSchema.isDescriptorLooping(Union.getDescriptor()));
 	}
 	
 	@Test
@@ -113,5 +117,15 @@ public class AutoSchemaTest {
 	@Test
 	public void testIsDescriptorNonLooping() {
 		Assert.assertFalse(AutoSchema.isDescriptorLooping(Movie.getDescriptor()));
+	}
+	
+	@Test
+	public void testRepeatedMessageTypeIsNotLooping() {
+		Assert.assertFalse(AutoSchema.isDescriptorLooping(Qux.getDescriptor()));
+	}
+	
+	@Test
+	public void testRepeatedMessageTypeInSubmessageNotLooping(){
+		Assert.assertFalse(AutoSchema.isDescriptorLooping(Ga.getDescriptor()));
 	}
 }
