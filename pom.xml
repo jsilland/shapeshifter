@@ -90,13 +90,6 @@
 						<phase>generate-sources</phase>
 					</execution>
 				</executions>
-				<configuration>
-					<toolchains>
-						<protobuf>
-							<version>2.4.1</version>
-						</protobuf>
-					</toolchains>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
