@@ -4,7 +4,7 @@
 
 	<groupId>com.turn</groupId>
 	<artifactId>shapeshifter</artifactId>
-	<version>1.1.2-SNAPSHOT</version>
+	<version>1.1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Shapeshifter</name>

@@ -78,6 +78,11 @@ import com.google.protobuf.Message;
  *	a repeated object.
  *	<li>{@link #useSchema(String, String)} lets you specify a schema for fields
  *	that reference other Protocol Buffer message types.
+ *	<li>{@link #setFormat(String, String) lets you specify a format for a given
+ *	field, providing a stronger semantic value to the field's data.
+ *	<li>{@link #surfaceLongsAsStrings} indicates that fields represented as
+ *	{@code Long} in the Java protobuf class should be converted to strings
+ *	externally.
  * </ul>
  *
  * <p><b>Warning</b>: Schema instances are always immutable. Configuration
