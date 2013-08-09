@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.protobuf.ByteString;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -273,5 +274,31 @@ public class NamedSchemaParserTest {
 				result, registry)).build();
 		Assert.assertEquals(1234567890L, parsed.getInt64Value());
 		Assert.assertEquals(1234567L, (long) parsed.getInt64RepeatedList().get(0));
+	}
+
+	@Test
+	public void testParseBytes() throws Exception {
+		NamedSchema schema = NamedSchema.of(Union.getDescriptor(), "Union")
+				.surfaceLongsAsStrings()
+				.setFormat("bytes_value", "byte");
+
+		byte[] bytes = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0,
+				0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2,
+				(byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		Union union = Union.newBuilder().setBytesValue(ByteString
+				.copyFrom(bytes)).build();
+
+		SchemaRegistry registry = new SchemaRegistry();
+		registry.register(schema);
+		JsonNode result = schema.getSerializer().serialize(union, registry);
+		Union parsed = Union.newBuilder().mergeFrom(new NamedSchemaParser(schema).parse(
+				result, registry)).build();
+		byte[] bytescopy = parsed.getBytesValue().toByteArray();
+		Assert.assertEquals(bytes.length, bytescopy.length);
+		for (int i = 0; i < bytes.length; i++) {
+			if (bytes[i] != bytescopy[i]) {
+				Assert.fail("bytes value has been interpolated!");
+			}
+		}
 	}
 }

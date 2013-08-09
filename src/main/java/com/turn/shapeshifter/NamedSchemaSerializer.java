@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
@@ -164,6 +165,12 @@ class NamedSchemaSerializer implements Serializer {
 			valueNode = BooleanNode.valueOf((Boolean) value);
 			break;
 		case BYTES:
+			byte[] bytes = ((ByteString)value).toByteArray();
+			String content = new String();
+			for (int i = 0; i < bytes.length; i++) {
+				content += (char)bytes[i];
+			}
+			valueNode = TextNode.valueOf(content);
 			break;
 		case DOUBLE:
 			valueNode = new DoubleNode((Double) value);

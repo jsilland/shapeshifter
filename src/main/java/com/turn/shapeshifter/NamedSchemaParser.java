@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Message;
 
@@ -163,6 +164,13 @@ public class NamedSchemaParser implements Parser {
 			value = Boolean.valueOf(jsonNode.asBoolean());
 			break;
 		case BYTES:
+			JsonTokens.checkJsonValueConformance(jsonNode, JsonTokens.VALID_STRING_TOKENS);
+			String content = jsonNode.asText();
+			byte[] bytes = new byte[content.length()];
+			for (int i = 0; i < content.length(); i++) {
+				bytes[i] = (byte)content.charAt(i);
+			}
+			value = ByteString.copyFrom(bytes);
 			break;
 		case DOUBLE:
 			value = new Double(jsonNode.asDouble());

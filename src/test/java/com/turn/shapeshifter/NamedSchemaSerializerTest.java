@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
+import com.google.protobuf.ByteString;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -301,5 +302,30 @@ public class NamedSchemaSerializerTest {
 		JsonNode arrayItem = result.get("int64Repeated").get(0);
 		Assert.assertEquals(JsonToken.VALUE_STRING, arrayItem.asToken());
 		Assert.assertEquals("1234567", arrayItem.asText());
+	}
+
+	@Test
+	public void testSerializeBytes() throws Exception {
+		NamedSchema schema = NamedSchema.of(Union.getDescriptor(), "Union")
+				.surfaceLongsAsStrings()
+				.setFormat("bytes_value", "byte");
+
+		byte[] bytes = new byte[] { (byte)0xe0, 0x4f, (byte)0xd0,
+				0x20, (byte)0xea, 0x3a, 0x69, 0x10, (byte)0xa2,
+				(byte)0xd8, 0x08, 0x00, 0x2b, 0x30, 0x30, (byte)0x9d };
+		Union union = Union.newBuilder().setBytesValue(ByteString
+				.copyFrom(bytes)).build();
+
+		SchemaRegistry registry = new SchemaRegistry();
+		registry.register(schema);
+		JsonNode result = schema.getSerializer().serialize(union, registry);
+		Assert.assertTrue(result.isObject());
+		Assert.assertEquals(JsonToken.VALUE_STRING, result.get("bytesValue").asToken());
+		Assert.assertEquals(bytes.length, result.get("bytesValue").asText().length());
+		for (int i = 0; i < bytes.length; i++) {
+			if (bytes[i] != (byte) result.get("bytesValue").asText().charAt(i)) {
+				Assert.fail("bytes value has been interpolated!");
+			}
+		}
 	}
 }

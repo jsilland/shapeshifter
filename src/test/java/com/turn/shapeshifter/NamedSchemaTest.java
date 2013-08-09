@@ -130,7 +130,7 @@ public class NamedSchemaTest {
 		
 		Assert.assertEquals("Union", jsonSchema.getId());
 		
-		Assert.assertEquals(10, jsonSchema.getPropertiesCount());
+		Assert.assertEquals(11, jsonSchema.getPropertiesCount());
 		Map<String, JsonSchema> properties = Maps.newHashMap();
 		for (JsonSchema property : jsonSchema.getPropertiesList()) {
 			properties.put(property.getName(), property);
@@ -198,7 +198,7 @@ public class NamedSchemaTest {
 		JsonSchema jsonSchema = schema.getJsonSchema(registry);
 		
 		Assert.assertEquals("Union", jsonSchema.getId());
-		Assert.assertEquals(9, jsonSchema.getPropertiesCount());
+		Assert.assertEquals(10, jsonSchema.getPropertiesCount());
 	}
 	
 	@Test
@@ -212,7 +212,7 @@ public class NamedSchemaTest {
 		JsonSchema jsonSchema = schema.getJsonSchema(registry);
 		
 		Assert.assertEquals("Union", jsonSchema.getId());
-		Assert.assertEquals(11, jsonSchema.getPropertiesCount());
+		Assert.assertEquals(12, jsonSchema.getPropertiesCount());
 	}
 	
 	@Test
