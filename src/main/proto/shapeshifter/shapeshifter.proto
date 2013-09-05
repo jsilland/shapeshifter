@@ -14,7 +14,7 @@
 
 package shapeshifter;
 
-option java_package = "com.turn.shapeshifter";
+option java_package = "io.soliton.shapeshifter";
 option java_outer_classname = "ShapeshifterProtos";
 
 // Enumeration of JSON Schema property types
